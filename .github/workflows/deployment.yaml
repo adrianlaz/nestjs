@@ -38,5 +38,5 @@ jobs:
         run: |
           aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
           docker build -t hellowwolrdrepository:$IMAGE_TAG .
-          docker tag hellowwolrdrepository:$IMAGE_TAG secrets.AWS_ECR/hellowwolrdrepository:$IMAGE_TAG
+          docker tag hellowwolrdrepository:$IMAGE_TAG ${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG
           docker push ${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG
