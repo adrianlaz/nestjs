@@ -5,9 +5,7 @@ on:
     branches:
       - main
 env:
-  AWS_REGION: eu-north-1
   AWS_REPOSITORY: hellowwolrdrepository
-  AWS_REGISTRY: ${{ secrets.AWS_ECR }}
 
 jobs:
   deploy:
@@ -23,7 +21,7 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::069524097677:role/GitHubAction-AssumeRoleWithAction
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: $AWS_REGION
+          aws-region: eu-north-1
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -34,7 +32,7 @@ jobs:
         env:
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_REGISTRY
+          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin secrets.AWS_ECR
           docker build -t $AWS_REPOSITORY:$IMAGE_TAG .
-          docker tag $AWS_REPOSITORY:$IMAGE_TAG $AWS_REGISTRY/$AWS_REPOSITORY:$IMAGE_TAG
-          docker push $AWS_REGISTRY/$AWS_REPOSITORY:$IMAGE_TAG
+          docker tag $AWS_REPOSITORY:$IMAGE_TAG secrets.AWS_ECR/$AWS_REPOSITORY:$IMAGE_TAG
+          docker push secrets.AWS_ECR/$AWS_REPOSITORY:$IMAGE_TAG
