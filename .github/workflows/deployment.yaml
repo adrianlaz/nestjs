@@ -27,20 +27,16 @@ jobs:
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: eu-north-1
 
-      - name: Sts GetCallerIdentity
-        run: |
-          aws sts get-caller-identity
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
 
-#      - name: Login to Amazon ECR
-#        id: login-ecr
-#        uses: aws-actions/amazon-ecr-login@v1
-#
-#      - name: Build, tag, and push image to Amazon ECR
-#        id: build-image
-#        env:
-#          IMAGE_TAG: ${{ github.sha }}
-#        run: |
-#          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin secrets.AWS_ECR
-#          docker build -t hellowwolrdrepository:$IMAGE_TAG .
-#          docker tag hellowwolrdrepository:$IMAGE_TAG secrets.AWS_ECR/hellowwolrdrepository:$IMAGE_TAG
-#          docker push secrets.AWS_ECR/hellowwolrdrepository:$IMAGE_TAG
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin secrets.AWS_ECR
+          docker build -t hellowwolrdrepository:$IMAGE_TAG .
+          docker tag hellowwolrdrepository:$IMAGE_TAG secrets.AWS_ECR/hellowwolrdrepository:$IMAGE_TAG
+          docker push secrets.AWS_ECR/hellowwolrdrepository:$IMAGE_TAG
