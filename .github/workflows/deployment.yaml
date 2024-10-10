@@ -12,17 +12,19 @@ jobs:
     environment: production
 
     steps:
-      - name: Git clone the repository
+      - name: Checkout
         uses: actions/checkout@v4
+
       - name: configure aws credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
           role-to-assume: arn:aws:iam::069524097677:role/GitHubAction-AssumeRoleWithAction
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: eu-north-1
-        - name: Sts GetCallerIdentity
-          run: |
-            aws sts get-caller-identity
+
+      - name: Sts GetCallerIdentity
+        run: |
+          aws sts get-caller-identity
 
 #      - name: Login to Amazon ECR
 #        id: login-ecr
