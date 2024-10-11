@@ -40,21 +40,23 @@ jobs:
           docker build -t hellowwolrdrepository:$IMAGE_TAG .
           docker tag hellowwolrdrepository:$IMAGE_TAG ${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG
           docker push ${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG
-          echo "image=${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          echo "::set-output name=image::${{ secrets.AWS_ECR }}/$AWS_REPOSITORY:$IMAGE_TAG"
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@c804dfbdd57f713b6c079302a4c01db7017a36fc
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
+      - name: Download task definiton
+        run: |
+          aws ecs describe-task-definition --task-definition task_oct_11 \
+          --query taskDefinition > task-definition.json
 
+      - name: Update task-definition.json
+        run: echo "`jq '.containerDefinitions[0].image="${{ steps.build-image.outputs.image }}"' task-definition.json`" > task-definition.json
 
       - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@df9643053eda01f169e64a0e60233aacca83799a
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          task-definition: task-definition.json
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+
+      - name: Force redeploy
+        run: |
+          aws ecs update-service --cluster ${{ ECS_CLUSTER }} --service ${{ ECS_SERVICE }} --region eu-north-1 --force-new-deployment
