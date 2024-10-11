@@ -31,32 +31,35 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
 
-      - name: Build, tag, and push image to Amazon ECR
-        id: build-image
-        env:
-          IMAGE_TAG: ${{ github.sha }}
-        run: |
-          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
-          docker build -t hellowwolrdrepository:$IMAGE_TAG .
-          docker tag hellowwolrdrepository:$IMAGE_TAG ${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG
-          docker push ${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG
-          echo "::set-output name=image::${{ secrets.AWS_ECR }}/$AWS_REPOSITORY:$IMAGE_TAG"
+#      - name: Build, tag, and push image to Amazon ECR
+#        id: build-image
+#        env:
+#          IMAGE_TAG: ${{ github.sha }}
+#        run: |
+#          aws ecr get-login-password --region eu-north-1 | docker login --username AWS --password-stdin ${{ secrets.AWS_ECR }}
+#          docker build -t hellowwolrdrepository:$IMAGE_TAG .
+#          docker tag hellowwolrdrepository:$IMAGE_TAG ${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG
+#          docker push ${{ secrets.AWS_ECR }}/hellowwolrdrepository:$IMAGE_TAG
+#          echo "::set-output name=image::${{ secrets.AWS_ECR }}/$AWS_REPOSITORY:$IMAGE_TAG"
 
       - name: Download task definiton
         run: |
           aws ecs describe-task-definition --task-definition task_oct_11 \
           --query taskDefinition > task-definition.json
-
-      - name: Update task-definition.json
-        run: echo "`jq '.containerDefinitions[0].image="${{ steps.build-image.outputs.image }}"' task-definition.json`" > task-definition.json
-
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          service: ${{ secrets.ECS_SERVICE }}
-          cluster: ${{ secrets.ECS_CLUSTER }}
-
-      - name: Force redeploy
+      - name: Get task-definition.json
         run: |
-          aws ecs update-service --cluster ${{ secrets.ECS_CLUSTER }} --service ${{ secrets.ECS_SERVICE }} --region eu-north-1 --force-new-deployment
+          cat task-definition.json
+
+#      - name: Update task-definition.json
+#        run: echo "`jq '.containerDefinitions[0].image="${{ steps.build-image.outputs.image }}"' task-definition.json`" > task-definition.json
+#
+#      - name: Deploy Amazon ECS task definition
+#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#        with:
+#          task-definition: task-definition.json
+#          service: ${{ secrets.ECS_SERVICE }}
+#          cluster: ${{ secrets.ECS_CLUSTER }}
+#
+#      - name: Force redeploy
+#        run: |
+#          aws ecs update-service --cluster ${{ secrets.ECS_CLUSTER }} --service ${{ secrets.ECS_SERVICE }} --region eu-north-1 --force-new-deployment
